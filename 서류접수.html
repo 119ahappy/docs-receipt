@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>서류 접수 시스템</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;font-size:15px}
+.container{max-width:600px;margin:0 auto;background:#fff;min-height:100vh}
+.header{background:#1a73e8;color:#fff;padding:1rem 1.25rem;font-size:17px;font-weight:600}
+.tabs{display:flex;border-bottom:1px solid #e0e0e0;background:#fff}
+.tab{flex:1;padding:0.75rem;text-align:center;cursor:pointer;font-size:14px;color:#666;border-bottom:2px solid transparent}
+.tab.active{color:#1a73e8;border-bottom-color:#1a73e8;font-weight:500}
+.content{padding:1rem 1.25rem}
+.section{margin-bottom:1.1rem}
+.slabel{font-size:13px;color:#555;margin-bottom:5px;display:block;font-weight:500}
+input[type=text],input[type=date],input[type=password],input[type=number]{width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;outline:none}
+input[type=text]:focus,input[type=date]:focus,input[type=password]:focus{border-color:#1a73e8}
+input[type=number]{width:64px;text-align:center}
+input[type=checkbox]{width:17px;height:17px;cursor:pointer;accent-color:#1a73e8}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.divider{border:none;border-top:1px solid #eee;margin:1rem 0}
+.check-item{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border:1px solid #e8e8e8;border-radius:8px;background:#fafafa;margin-bottom:5px}
+.check-left{display:flex;align-items:center;gap:9px;font-size:14px}
+.qty-wrap{display:flex;align-items:center;gap:6px;font-size:13px;color:#666;white-space:nowrap}
+.memo-input{margin:0 0 5px;padding:0 2px}
+.memo-input input{font-size:13px;padding:7px 10px}
+.gumso-wrap{border:1px solid #e8e8e8;border-radius:8px;background:#fafafa;padding:9px 11px;margin-bottom:5px}
+.sub-checks{margin:6px 0 8px 8px;display:flex;flex-direction:column;gap:5px}
+.sub-item{display:flex;align-items:center;padding:7px 10px;border:1px solid #e8e8e8;border-radius:8px;background:#fff;gap:8px;font-size:13px}
+.total-box{background:#e8f0fe;border:1px solid #c5d6f7;border-radius:8px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between}
+.total-label{font-size:13px;color:#1a73e8;font-weight:500}
+.total-num{font-size:22px;font-weight:600;color:#1a73e8}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;margin-top:0.8rem}
+.btn-primary{background:#1a73e8;color:#fff}
+.btn-primary:active{background:#1557b0}
+.btn-primary:disabled{background:#aaa}
+.photo-label{display:flex;align-items:center;justify-content:center;border:1px dashed #bbb;border-radius:8px;padding:16px;cursor:pointer;font-size:14px;color:#666;gap:8px}
+.photo-label:active{background:#f0f0f0}
+input[type=file]{display:none}
+.photo-names{font-size:12px;color:#1a73e8;margin-top:5px}
+.sync-status{font-size:12px;color:#888;text-align:right;margin-top:4px}
+.record-card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px}
+.record-name{font-weight:600;font-size:15px}
+.record-date{font-size:12px;color:#888;margin-top:2px}
+.record-docs{font-size:13px;color:#555;margin:8px 0;line-height:1.7}
+.record-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:6px;font-weight:500;white-space:nowrap}
+.badge-pending{background:#fff3e0;color:#e65100}
+.badge-kept{background:#e8f5e9;color:#2e7d32}
+.badge-sent{background:#e8f0fe;color:#1a73e8}
+.pbtn{padding:6px 13px;font-size:13px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;color:#333}
+.pbtn:active{background:#f0f0f0}
+.process-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.date-inline{padding:5px 9px;font-size:13px;border:1px solid #ddd;border-radius:8px;width:auto;background:#fff}
+.lock-screen{padding:3rem 1rem;text-align:center}
+.lock-icon{font-size:48px;margin-bottom:1rem}
+.lock-screen input{max-width:200px;margin:0.5rem auto;display:block;text-align:center}
+.empty{text-align:center;padding:2rem;color:#aaa;font-size:14px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;white-space:nowrap;display:none;z-index:999}
+.section-title{font-size:13px;font-weight:500;color:#555;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">📋 서류 접수 시스템</div>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('submit')">서류 접수</div>
+    <div class="tab" onclick="showTab('admin')">담당자 확인</div>
+    <div class="tab" onclick="showTab('vault')">증권 보관</div>
+  </div>
+
+  <!-- 서류 접수 -->
+  <div id="tab-submit" class="content">
+    <div class="row2">
+      <div class="section"><span class="slabel">제출일</span><input type="date" id="submit-date"></div>
+      <div class="section"><span class="slabel">계약일</span><input type="date" id="contract-date"></div>
+    </div>
+    <div class="row2">
+      <div class="section"><span class="slabel">제출자</span><input type="text" id="submitter" placeholder="이름"></div>
+      <div class="section"><span class="slabel">계약자</span><input type="text" id="contractor" placeholder="이름"></div>
+    </div>
+    <div class="section">
+      <span class="slabel">피보험자 <span style="font-size:11px;color:#aaa">(계약자와 다를 때만)</span></span>
+      <input type="text" id="insured" placeholder="이름">
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <div class="section-title">청약 묶음</div>
+      <div class="check-item">
+        <div class="check-left"><input type="checkbox" id="c-cheongnyak" onchange="calcTotal()"><span>청약서 + 상품설명서</span></div>
+        <div class="qty-wrap">장수 <input type="number" id="q-cheongnyak" min="1" value="1" onchange="calcTotal()"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">금소법 묶음</div>
+      <div class="gumso-wrap">
+        <div class="check-left" style="margin-bottom:6px">
+          <input type="checkbox" id="c-gumso" onchange="toggleGumso()">
+          <span style="font-weight:500;font-size:14px">금소법 서류</span>
+        </div>
+        <div id="gumso-detail" style="display:none">
+          <div class="sub-checks">
+            <div class="sub-item"><input type="checkbox" class="gc"><span>고객용 동의서</span></div>
+            <div class="sub-item"><input type="checkbox" class="gc"><span>고지의무확인서</span></div>
+            <div class="sub-item"><input type="checkbox" class="gc"><span>완전판매확인서</span></div>
+            <div class="sub-item"><input type="checkbox" class="gc"><span>비교설명확인서</span></div>
+            <div class="sub-item"><input type="checkbox" class="gc"><span>증권수령확인서</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:7px">
+            <span style="font-size:13px;color:#666">총 장수</span>
+            <input type="number" id="q-gumso" min="1" value="3" onchange="calcTotal()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">기타 서류</div>
+      <div class="check-item">
+        <div class="check-left"><input type="checkbox" id="c-busok" onchange="tog('busok');calcTotal()"><span>부속서류</span></div>
+        <div class="qty-wrap">장수 <input type="number" id="q-busok" min="1" value="1" onchange="calcTotal()"></div>
+      </div>
+      <div class="memo-input" id="m-busok" style="display:none"><input type="text" placeholder="예) 신분증 사본, 통장 사본, 법인등록증"></div>
+
+      <div class="check-item">
+        <div class="check-left"><input type="checkbox" id="c-change" onchange="tog('change');calcTotal()"><span>변경신청서</span></div>
+        <div class="qty-wrap">장수 <input type="number" id="q-change" min="1" value="1" onchange="calcTotal()"></div>
+      </div>
+      <div class="memo-input" id="m-change" style="display:none"><input type="text" placeholder="예) 수익자 변경, 주소 변경"></div>
+
+      <div class="check-item">
+        <div class="check-left"><input type="checkbox" id="c-bowan" onchange="tog('bowan');calcTotal()"><span>보완서류</span></div>
+        <div class="qty-wrap">장수 <input type="number" id="q-bowan" min="1" value="1" onchange="calcTotal()"></div>
+      </div>
+      <div class="memo-input" id="m-bowan" style="display:none"><input type="text" placeholder="예) 자필서명 재작성, 고지 추가"></div>
+
+      <div class="check-item">
+        <div class="check-left"><input type="checkbox" id="c-ipsa" onchange="tog('ipsa');calcTotal()"><span>입사 관련 서류</span></div>
+        <div class="qty-wrap">장수 <input type="number" id="q-ipsa" min="1" value="1" onchange="calcTotal()"></div>
+      </div>
+      <div class="memo-input" id="m-ipsa" style="display:none"><input type="text" placeholder="예) 위촉계약서, 신분증, 통장 사본"></div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="total-box">
+      <span class="total-label">총 장수</span>
+      <span class="total-num" id="total-count">0장</span>
+    </div>
+
+    <div class="section" style="margin-top:1rem">
+      <span class="slabel">서류 사진 첨부</span>
+      <label class="photo-label" for="photo-upload">📷 사진 선택 (복수 가능)</label>
+      <input type="file" id="photo-upload" multiple accept="image/*" onchange="showPhotoNames()">
+      <div class="photo-names" id="photo-names"></div>
+    </div>
+
+    <button class="btn btn-primary" id="submit-btn" onclick="submitForm()">접수 등록</button>
+    <div class="sync-status" id="sync-status"></div>
+  </div>
+
+  <!-- 담당자 확인 -->
+  <div id="tab-admin" class="content" style="display:none">
+    <div id="lock-admin" class="lock-screen">
+      <div class="lock-icon">🔒</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:6px">담당자 전용</div>
+      <div style="font-size:13px;color:#888;margin-bottom:16px">비밀번호를 입력하세요</div>
+      <input type="password" id="pw-admin" placeholder="비밀번호" onkeydown="if(event.key==='Enter')checkPw('admin')">
+      <button class="btn btn-primary" style="max-width:200px;margin:0.6rem auto 0;display:block" onclick="checkPw('admin')">확인</button>
+    </div>
+    <div id="admin-content" style="display:none">
+      <div id="admin-list"></div>
+    </div>
+  </div>
+
+  <!-- 증권 보관 -->
+  <div id="tab-vault" class="content" style="display:none">
+    <div id="lock-vault" class="lock-screen">
+      <div class="lock-icon">🔒</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:6px">담당자 전용</div>
+      <div style="font-size:13px;color:#888;margin-bottom:16px">비밀번호를 입력하세요</div>
+      <input type="password" id="pw-vault" placeholder="비밀번호" onkeydown="if(event.key==='Enter')checkPw('vault')">
+      <button class="btn btn-primary" style="max-width:200px;margin:0.6rem auto 0;display:block" onclick="checkPw('vault')">확인</button>
+    </div>
+    <div id="vault-content" style="display:none">
+      <div class="section">
+        <div class="section-title">증권 등록</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <input type="text" id="v-name" placeholder="계약자명">
+          <input type="text" id="v-product" placeholder="상품명">
+          <input type="date" id="v-date">
+          <button class="btn btn-primary" style="margin-top:0" onclick="addVault()">보관 등록</button>
+        </div>
+      </div>
+      <hr class="divider">
+      <div id="vault-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ✅ 비밀번호 변경: 아래 ADMIN_PW 값만 바꾸면 됩니다
+const ADMIN_PW = '1234';
+
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxpm8-FR7sachx6dHa620sD3wrua7r66m7AkxM5U1_ED884j1iYuqP_g0d6DpI4xHu0/exec';
+
+const today = new Date().toISOString().slice(0,10);
+document.getElementById('submit-date').value = today;
+document.getElementById('v-date').value = today;
+
+let records = [], vaults = [], unlocked = {admin:false, vault:false};
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 2500);
+}
+
+function showTab(t) {
+  ['submit','admin','vault'].forEach(id => {
+    document.getElementById('tab-'+id).style.display = id===t ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((el,i) => {
+    el.classList.toggle('active', ['submit','admin','vault'][i]===t);
+  });
+  if(t==='admin' && unlocked.admin) renderAdmin();
+  if(t==='vault' && unlocked.vault) renderVault();
+}
+
+function checkPw(type) {
+  const pw = document.getElementById('pw-'+type).value;
+  if(pw === ADMIN_PW) {
+    unlocked[type] = true;
+    document.getElementById('lock-'+type).style.display = 'none';
+    document.getElementById(type===('admin'?'admin':'vault')+'-content').style.display = 'block';
+    document.getElementById(type+'-content').style.display = 'block';
+    if(type==='admin') renderAdmin();
+    else renderVault();
+  } else {
+    toast('비밀번호가 틀렸어요');
+  }
+}
+
+function toggleGumso() {
+  document.getElementById('gumso-detail').style.display = document.getElementById('c-gumso').checked ? 'block' : 'none';
+  calcTotal();
+}
+
+function tog(key) {
+  const el = document.getElementById('m-'+key);
+  if(el) el.style.display = document.getElementById('c-'+key).checked ? 'block' : 'none';
+}
+
+function calcTotal() {
+  let t = 0;
+  ['cheongnyak','change','bowan','busok','ipsa'].forEach(k => {
+    if(document.getElementById('c-'+k).checked) t += parseInt(document.getElementById('q-'+k).value)||0;
+  });
+  if(document.getElementById('c-gumso').checked) t += parseInt(document.getElementById('q-gumso').value)||0;
+  document.getElementById('total-count').textContent = t + '장';
+}
+
+function getMemo(key) {
+  const el = document.getElementById('m-'+key);
+  return el ? (el.querySelector('input')?.value.trim()||'') : '';
+}
+
+function showPhotoNames() {
+  const f = document.getElementById('photo-upload').files;
+  document.getElementById('photo-names').textContent = f.length ? '첨부: '+[...f].map(x=>x.name).join(', ') : '';
+}
+
+async function postSheet(data) {
+  try {
+    await fetch(SHEET_URL, {method:'POST', body:JSON.stringify(data)});
+    return true;
+  } catch(e) { return false; }
+}
+
+async function submitForm() {
+  const submitter = document.getElementById('submitter').value.trim();
+  const contractor = document.getElementById('contractor').value.trim();
+  if(!submitter||!contractor) { toast('제출자와 계약자를 입력해주세요'); return; }
+
+  const docs = [];
+  if(document.getElementById('c-cheongnyak').checked)
+    docs.push('청약서+상품설명서 '+document.getElementById('q-cheongnyak').value+'장');
+  if(document.getElementById('c-gumso').checked) {
+    const subs = [...document.querySelectorAll('.gc')].filter(c=>c.checked).map(c=>c.nextElementSibling.textContent.trim());
+    docs.push('금소법'+(subs.length?'('+subs.join('·')+')':'')+' '+document.getElementById('q-gumso').value+'장');
+  }
+  [{k:'busok',l:'부속서류'},{k:'change',l:'변경신청서'},{k:'bowan',l:'보완서류'},{k:'ipsa',l:'입사서류'}].forEach(({k,l}) => {
+    if(document.getElementById('c-'+k).checked) {
+      const m = getMemo(k);
+      docs.push(l+(m?' ('+m+')':'')+' '+document.getElementById('q-'+k).value+'장');
+    }
+  });
+
+  if(!docs.length) { toast('서류를 하나 이상 선택해주세요'); return; }
+
+  const id = Date.now();
+  const rec = {
+    id, submitDate:document.getElementById('submit-date').value,
+    contractDate:document.getElementById('contract-date').value,
+    submitter, contractor, insured:document.getElementById('insured').value.trim(),
+    docs, total:document.getElementById('total-count').textContent,
+    photos:document.getElementById('photo-upload').files.length,
+    status:'pending', processType:'', processDate:''
+  };
+  records.push(rec);
+
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = '저장 중...'; btn.disabled = true;
+  const ok = await postSheet({type:'receipt', ...rec});
+  btn.textContent = '접수 등록'; btn.disabled = false;
+
+  if(ok) {
+    toast('접수 완료 — 구글 시트에 저장됐어요');
+    document.getElementById('sync-status').textContent = '구글 시트 저장 완료 ✓';
+  } else {
+    toast('저장 실패 — 인터넷 연결을 확인해주세요');
+    document.getElementById('sync-status').textContent = '시트 저장 실패';
+  }
+  showTab('admin');
+}
+
+function renderAdmin() {
+  const el = document.getElementById('admin-list');
+  if(!records.length) { el.innerHTML='<div class="empty">접수된 서류가 없어요</div>'; return; }
+  el.innerHTML = records.slice().reverse().map(r => {
+    const badge = r.status==='pending'
+      ? '<span class="badge badge-pending">미처리</span>'
+      : r.processType==='kept'
+        ? '<span class="badge badge-kept">보관</span>'
+        : '<span class="badge badge-sent">발송 '+r.processDate+'</span>';
+    const btns = r.status==='pending' ? `
+      <div class="process-row">
+        <button class="pbtn" onclick="process(${r.id},'kept')">보관</button>
+        <button class="pbtn" onclick="toggleSend(${r.id})">원수사 발송</button>
+      </div>
+      <div id="send-${r.id}" style="display:none;margin-top:6px">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:13px;color:#666">발송일</span>
+          <input type="date" class="date-inline" id="sd-${r.id}" value="${today}">
+          <button class="pbtn" onclick="process(${r.id},'sent')">확인</button>
+        </div>
+      </div>` : '';
+    return `<div class="record-card">
+      <div class="record-header">
+        <div>
+          <div class="record-name">${r.contractor}${r.insured?' / '+r.insured:''}</div>
+          <div class="record-date">제출자: ${r.submitter} · 제출일 ${r.submitDate}${r.contractDate?' · 계약일 '+r.contractDate:''}</div>
+        </div>${badge}
+      </div>
+      <div class="record-docs">${r.docs.join('<br>')} · 합계 ${r.total}${r.photos?' · 사진 '+r.photos+'장':''}</div>
+      ${btns}
+    </div>`;
+  }).join('');
+}
+
+function toggleSend(id) {
+  const el = document.getElementById('send-'+id);
+  el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+async function process(id, type) {
+  const r = records.find(x=>x.id===id); if(!r) return;
+  r.status='done'; r.processType=type;
+  r.processDate = type==='sent' ? (document.getElementById('sd-'+id)?.value||today) : today;
+  await postSheet({type:'process', id:r.id, processType:type, processDate:r.processDate});
+  renderAdmin();
+  toast(type==='kept' ? '보관으로 처리됐어요' : '원수사 발송으로 처리됐어요');
+}
+
+async function addVault() {
+  const name = document.getElementById('v-name').value.trim();
+  if(!name) { toast('계약자명을 입력해주세요'); return; }
+  const v = {
+    id:Date.now(), name,
+    product:document.getElementById('v-product').value.trim(),
+    date:document.getElementById('v-date').value,
+    returned:false, returnDate:''
+  };
+  vaults.push(v);
+  await postSheet({type:'vault', ...v});
+  document.getElementById('v-name').value='';
+  document.getElementById('v-product').value='';
+  renderVault();
+  toast('증권 보관 등록됐어요');
+}
+
+function renderVault() {
+  const el = document.getElementById('vault-list');
+  const active = vaults.filter(v=>!v.returned);
+  const done = vaults.filter(v=>v.returned);
+  if(!active.length&&!done.length) { el.innerHTML='<div class="empty">보관 중인 증권이 없어요</div>'; return; }
+  let html = '';
+  if(active.length) {
+    html += '<div style="font-size:13px;font-weight:500;color:#555;margin-bottom:8px">보관 중</div>';
+    html += active.map(v=>`<div class="record-card">
+      <div class="record-header">
+        <div><div class="record-name">${v.name}</div><div class="record-date">${v.product} · 등록 ${v.date}</div></div>
+        <span class="badge badge-pending">보관 중</span>
+      </div>
+      <div class="process-row" style="margin-top:6px">
+        <input type="date" class="date-inline" id="vd-${v.id}" value="${today}">
+        <button class="pbtn" onclick="returnVault(${v.id})">반환 확인</button>
+      </div>
+    </div>`).join('');
+  }
+  if(done.length) {
+    html += '<div style="font-size:13px;font-weight:500;color:#555;margin:10px 0 8px">반환 완료</div>';
+    html += done.map(v=>`<div class="record-card" style="opacity:0.5">
+      <div class="record-header">
+        <div><div class="record-name">${v.name}</div><div class="record-date">${v.product} · 반환 ${v.returnDate}</div></div>
+        <span class="badge badge-kept">반환 완료</span>
+      </div>
+    </div>`).join('');
+  }
+  el.innerHTML = html;
+}
+
+async function returnVault(id) {
+  const v = vaults.find(x=>x.id===id); if(!v) return;
+  v.returned=true;
+  v.returnDate = document.getElementById('vd-'+id)?.value||today;
+  await postSheet({type:'vault_return', id:v.id, returnDate:v.returnDate});
+  renderVault();
+  toast('반환 처리됐어요');
+}
+</script>
+</body>
+</html>
