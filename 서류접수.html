@@ -75,8 +75,8 @@ input[type=file]{display:none}
 
   <div id="tab-submit" class="content">
     <div class="row2">
-      <div class="section"><span class="slabel">제출일</span><input type="date" id="submit-date"></div>
-      <div class="section"><span class="slabel">계약일</span><input type="date" id="contract-date"></div>
+      <div class="section"><span class="slabel">제출일</span><input type="text" id="submit-date" placeholder="예) 2025-07-31"></div>
+      <div class="section"><span class="slabel">계약일</span><input type="text" id="contract-date" placeholder="예) 2000-01-15"></div>
     </div>
     <div class="row2">
       <div class="section"><span class="slabel">제출자</span><input type="text" id="submitter" placeholder="이름"></div>
@@ -270,10 +270,24 @@ function previewPhotos() {
 
 async function fileToBase64(file) {
   return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result.split(',')[1]);
-    r.onerror = rej;
-    r.readAsDataURL(file);
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 1200;
+      let w = img.width, h = img.height;
+      if(w > MAX || h > MAX) {
+        if(w > h) { h = Math.round(h * MAX/w); w = MAX; }
+        else { w = Math.round(w * MAX/h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const data = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+      URL.revokeObjectURL(url);
+      res(data);
+    };
+    img.onerror = rej;
+    img.src = url;
   });
 }
 
