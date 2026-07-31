@@ -198,7 +198,8 @@ input[type=file]{display:none}
 <script>
 const ADMIN_PW = '1234';
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzsQ0V_yU-Sw1vveScNKlrqN7s1vxjH4swxMIisAO0tccoD1QFyO6Z_jPR7M97bQF2g/exec';
-const today = new Date().toISOString().slice(0,10);
+const now = new Date();
+const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
 document.getElementById('submit-date').value = today;
 document.getElementById('v-date').value = today;
 let unlocked = {admin:false, vault:false};
